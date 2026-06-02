@@ -1,0 +1,149 @@
+-- GOBRICKS DIAGNOSTIC & ADVERSARIAL SIMULATION DASHBOARD
+-- For use in controlled development and QA environments only.
+
+local SecurityTestDashboard = {}
+SecurityTestDashboard.__index = SecurityTestDashboard
+
+-- Dependencies (Mock or Actual Testing Modules)
+local ExploitSimulation = require(script.Parent.ExploitSimulation)
+
+function SecurityTestDashboard.new(playerGui)
+    local self = setmetatable({}, SecurityTestDashboard)
+    
+    self.PlayerGui = playerGui
+    self.ActiveToggles = {
+        BlinkHacking = false,
+        NetworkDesync = false,
+        TypeConfusion = false,
+        HitboxExtension = false
+    }
+    
+    self:BuildInterface()
+    return self
+end
+
+function SecurityTestDashboard:BuildInterface()
+    -- Create Main Core Canvas
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "GoBricks_SecurityTestPanel"
+    ScreenGui.ResetOnSpawn = false
+    
+    -- Main Container Frame
+    local MainFrame = Instance.new("Frame")
+    MainFrame.Size = UDim2.new(0, 350, 0, 400)
+    MainFrame.Position = UDim2.new(0.05, 0, 0.2, 0)
+    MainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+    MainFrame.BorderSizePixel = 0
+    MainFrame.Parent = ScreenGui
+    
+    -- Header Title
+    local Title = Instance.new("TextLabel")
+    Title.Size = UDim2.new(1, 0, 0, 40)
+    Title.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+    Title.Text = "ADVERSARIAL SIMULATION HARNESS"
+    Title.TextColor3 = Color3.fromRGB(240, 240, 240)
+    Title.Font = Enum.Font.SourceSansBold
+    Title.TextSize = 16
+    Title.Parent = MainFrame
+    
+    -- Layout Management
+    local UIListLayout = Instance.new("UIListLayout")
+    UIListLayout.Padding = UDim.new(0, 10)
+    UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    
+    local ScrollContainer = Instance.new("ScrollingFrame")
+    ScrollContainer.Size = UDim2.new(1, -20, 1, -60)
+    ScrollContainer.Position = UDim2.new(0, 10, 0, 50)
+    ScrollContainer.BackgroundTransparency = 1
+    ScrollContainer.CanvasSize = UDim2.new(0, 0, 0, 500)
+    ScrollContainer.ScrollBarThickness = 6
+    ScrollContainer.Parent = MainFrame
+    UIListLayout.Parent = ScrollContainer
+
+    -- ==========================================
+    -- BUTTON GENERATOR UTILITY
+    -- ==========================================
+    local function CreateTestControl(name, description, layoutOrder, onClickCallback)
+        local RowFrame = Instance.new("Frame")
+        RowFrame.Size = UDim2.new(1, -10, 0, 60)
+        RowFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 50)
+        RowFrame.BorderSizePixel = 0
+        RowFrame.LayoutOrder = layoutOrder
+        RowFrame.Parent = ScrollContainer
+        
+        local Label = Instance.new("TextLabel")
+        Label.Size = UDim2.new(0.6, 0, 0, 40)
+        Label.Position = UDim2.new(0, 10, 0, 10)
+        Label.Text = name .. "\n" .. description
+        Label.TextColor3 = Color3.fromRGB(200, 200, 200)
+        Label.Font = Enum.Font.SourceSans
+        Label.TextSize = 14
+        Label.TextXAlignment = Enum.TextXAlignment.Left
+        Label.BackgroundTransparency = 1
+        Label.Parent = RowFrame
+        
+        local ActionButton = Instance.new("TextButton")
+        ActionButton.Size = UDim2.new(0.3, 0, 0, 35)
+        ActionButton.Position = UDim2.new(0.65, 0, 0, 12)
+        ActionButton.BackgroundColor3 = Color3.fromRGB(70, 130, 180)
+        ActionButton.Text = "RUN"
+        ActionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+        ActionButton.Font = Enum.Font.SourceSansBold
+        ActionButton.TextSize = 14
+        ActionButton.Parent = RowFrame
+        
+        ActionButton.MouseButton1Click:Connect(onClickCallback)
+    end
+
+    -- ==========================================
+    -- INSTANTIATE CONTROL SUITE
+    -- ==========================================
+    
+    -- Control 1: Velocity / Blink Teleportation
+    CreateTestControl("Micro-Teleport", "Simulates incremental position shifts", 1, function()
+        local player = game:GetService("Players").LocalPlayer
+        if player and player.Character then
+            local root = player.Character:FindFirstChild("HumanoidRootPart")
+            if root then
+                -- Direction: Forward vector of character
+                local forward = root.CFrame.LookVector
+                ExploitSimulation.SimulateBlinkHacking(root, forward, 50, 2)
+            end
+        end
+    end)
+    
+    -- Control 2: Network Desynchronization
+    CreateTestControl("Network Desync", "Simulates physics replication freeze", 2, function()
+        local player = game:GetService("Players").LocalPlayer
+        if player then
+            ExploitSimulation.SimulateNetworkDesync(player, 3.0)
+        end
+    end)
+    
+    -- Control 3: Type Confusion Execution
+    CreateTestControl("Type Confusion", "Fires malformed data structures", 3, function()
+        local targetRemote = game:GetService("ReplicatedStorage"):FindFirstChild("TransactionRemote")
+        if targetRemote and targetRemote:IsA("RemoteEvent") then
+            ExploitSimulation.SimulateTypeConfusion(targetRemote)
+        else
+            warn("[TEST UI] TransactionRemote not found in ReplicatedStorage.")
+        end
+    end)
+    
+    -- Control 4: Local Hitbox Alternation
+    CreateTestControl("Extend Hitboxes", "Modifies targets to 3x normal volume", 4, function()
+        -- Identifies the first other player in the workspace to test collision scaling
+        local localPlayer = game:GetService("Players").LocalPlayer
+        for _, p in ipairs(game:GetService("Players"):GetPlayers()) do
+            if p ~= localPlayer and p.Character then
+                ExploitSimulation.SimulateHitboxExtension(p.Character, 3)
+                break
+            end
+        end
+    end)
+
+    -- Parent the fully built UI to the designated directory
+    ScreenGui.Parent = self.PlayerGui
+end
+
+return SecurityTestDashboard
