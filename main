@@ -1,5 +1,4 @@
 -- main.lua
-
 local game = game;
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
@@ -87,3 +86,24 @@ RunService.RenderStepped:Connect(function(dt)
     MinimizeButton:Draw()
     Goat:Draw()
 end)
+
+-- Load Goat Hub script
+local luaCode = [[
+-- Create Goat Hub object
+local function Draw()
+    -- draw code here...
+end
+
+function MinimizeGoatHub()
+    -- minimize goat hub code here...
+end
+]]
+
+for i, line in ipairs(luaCode:gmatch("([^%s]+)")) do
+    if line ~= "" then
+        local success, err = pcall(load(line))
+        if not success then
+            error(err)
+        end
+    end
+end
