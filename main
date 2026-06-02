@@ -1,2 +1,89 @@
-local lib = loadfile(script.Parent)
-lib.main:()
+-- main.lua
+
+local game = game;
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+
+local Dragging = false
+local OffsetX = 0
+local OffsetY = 0
+
+local function onMouseMove(x, y)
+    if Dragging then
+        DraggableCircle.X = x - OffsetX
+        DraggableCircle.Y = y - OffsetY
+    end
+end
+
+local function onMouseUp()
+    Dragging = false
+end
+
+UserInputService.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        Dragging = true
+    elseif input.UserInputType == Enum.UserInputType.MouseButton2 then
+        -- Minimize Goat Hub
+        MinimizeGoatHub()
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        Dragging = false
+    elseif input.UserInputType == Enum.UserInputType.MouseButton2 then
+        -- Reset Offset
+        OffsetX = 0
+        OffsetY = 0
+    end
+end)
+
+UserInputService.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Keyboard then
+        if input.KeyCode == Enum.KeyCode.LeftShift or input.KeyCode == Enum.KeyCode.Control1 then
+            -- Minimize Goat Hub
+            MinimizeGoatHub()
+        end
+    end
+end)
+
+-- Create draggable circle
+local DraggableCircle = Instance.new("Part")
+DraggableCircle.Name = "circle"
+DraggableCircle.Size = Vector3.new(50, 50, 0.1)
+DraggableCircle.Anchored = true
+DraggableCircle.CanCollide = false
+DraggableCircle.Parent = game.Workspace
+
+-- Create goat inside circle
+local Goat = Instance.new("Part")
+Goat.Name = "goat"
+Goat.Size = Vector3.new(10, 10, 0.1)
+Goat.Position = Vector3.new(DraggableCircle.Position.X + 25, DraggableCircle.Position.Y + 25, 0)
+Goat.Parent = DraggableCircle
+
+-- Create - button
+local MinimizeButton = Instance.new("Part")
+MinimizeButton.Name = "button"
+MinimizeButton.Size = Vector3.new(10, 10, 1)
+MinimizeButton.Anchored = true
+MinimizeButton.CanCollide = false
+MinimizeButton.Parent = DraggableCircle
+
+-- Set up UI
+DraggableCircle Dragging = true
+DraggableCircle.MouseMoved:Connect(onMouseMove)
+DraggableCircle.MouseUp:Connect(onMouseUp)
+
+-- Minimize Goat Hub function
+local function MinimizeGoatHub()
+    local MousePosition = game:GetService("UserInputService"):GetMouseLocation()
+    DraggableCircle.Position = UDim2.new(0, 100 - MousePosition.X, 0, 100 - MousePosition.Y)
+end
+
+RunService.RenderStepped:Connect(function(dt)
+    -- Draw everything
+    DraggableCircle:Draw()
+    MinimizeButton:Draw()
+    Goat:Draw()
+end)
